@@ -27,4 +27,10 @@ urlpatterns = [
     ),
     
     path("brand-profile/create/", BrandProfileUpdateAPIView.as_view(), name="brand-profile-create"),
+    path('competitors/add/', AddCompetitorView.as_view(), name='add-competitor'),
+    path('competitors/', CompetitorView.as_view()),                 # GET, POST
+    path('competitors/<int:competitor_id>/', CompetitorView.as_view()),  # GET, PUT, PATCH, DELETE
+    path("secondary-brands/", SecondaryBrandView.as_view()),
+    path("secondary-brands/<int:pk>/", SecondaryBrandView.as_view()),
+
 ]

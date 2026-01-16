@@ -154,14 +154,14 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://smartcoderrahis.pythonanywhere.com",
     "https://dev-rumble-nextapp.vercel.app",
-    "https://aeo-frontend.vercel.app/",
+    "https://aeo-frontend.vercel.app",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "https://smartcoderrahis.pythonanywhere.com",
     "https://dev-rumble-nextapp.vercel.app",
-    "https://aeo-frontend.vercel.app/",
+    "https://aeo-frontend.vercel.app",
 ]
 
 
