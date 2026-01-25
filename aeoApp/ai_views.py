@@ -237,6 +237,8 @@ class AEOChatAPIView(APIView):
     def post(self, request):
         user = request.user
         prompt = request.data.get("prompt")
+        print(prompt)
+        print(user)
         if not prompt:
             return Response({"error": "Prompt is required"}, status=400)
 
@@ -250,6 +252,7 @@ class AEOChatAPIView(APIView):
         # -----------------------------
         headers = {"X-API-KEY": settings.SERPER_API_KEY, "Content-Type": "application/json"}
         payload = {"q": prompt}
+        print(settings.SERPER_API_KEY)
 
         try:
             serp_response = requests.post(
