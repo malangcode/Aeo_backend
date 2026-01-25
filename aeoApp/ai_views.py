@@ -263,6 +263,7 @@ class AEOChatAPIView(APIView):
             return Response({"error": f"Search request failed: {str(e)}"}, status=502)
 
         data = serp_response.json()
+        print(data)
         web_pages = data.get("organic", [])
 
         serp_results = []
