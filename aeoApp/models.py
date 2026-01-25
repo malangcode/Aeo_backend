@@ -46,3 +46,88 @@ class Competitors(models.Model):
       
     def __str__(self):
         return self.brand_name
+    
+    
+
+
+class PromptHistory(models.Model):
+    brand_profile = models.ForeignKey(
+        BrandProfile,
+        on_delete=models.CASCADE,
+        related_name="prompt_history"
+    )
+
+    prompt = models.TextField()
+
+    ai_response = models.TextField()
+
+    # Visibility flags
+    user_brand_mentioned = models.BooleanField(default=False)
+    competitor_mentioned = models.BooleanField(default=False)
+
+    # Structured mentions
+    mentioned_brands = models.JSONField(default=list)
+    mentioned_domains = models.JSONField(default=list)
+
+    # Source classification
+    SOURCE_CHOICES = (
+        ("LLM", "LLM Knowledge"),
+        ("SEARCH", "Search AI"),
+    )
+    source_type = models.CharField(
+        max_length=10,
+        choices=SOURCE_CHOICES
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.prompt
+    
+    
+    
+
+
+class BrandMentionMetric(models.Model):
+    brand_profile = models.ForeignKey(
+        BrandProfile,
+        on_delete=models.CASCADE,
+        related_name="mention_metrics"
+    )
+
+    brand_name = models.CharField(max_length=255)
+
+    total_mentions = models.PositiveIntegerField(default=0)
+
+    last_mentioned_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ("brand_profile", "brand_name")
+
+    def __str__(self):
+        return f"{self.brand_name} - {self.total_mentions}"
+    
+    
+    
+
+
+class BrandMentionTimeseries(models.Model):
+    brand_profile = models.ForeignKey(
+        BrandProfile,
+        on_delete=models.CASCADE,
+        related_name="timeseries"
+    )
+
+    brand_name = models.CharField(max_length=255)
+
+    date = models.DateField()
+
+    mentions = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = ("brand_profile", "brand_name", "date")
+        ordering = ["date"]
+    

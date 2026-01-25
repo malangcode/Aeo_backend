@@ -5,6 +5,7 @@ from .auth_views import CookieLoginView, CookieLogoutView
 from . import Oauth2_views
 from . import github_auth_views
 from .views import *
+from .ai_views import AEOChatAPIView
 
 
 urlpatterns = [
@@ -32,5 +33,7 @@ urlpatterns = [
     path('competitors/<int:competitor_id>/', CompetitorView.as_view()),  # GET, PUT, PATCH, DELETE
     path("secondary-brands/", SecondaryBrandView.as_view()),
     path("secondary-brands/<int:pk>/", SecondaryBrandView.as_view()),
+    path("api/aeo/chat/", AEOChatAPIView.as_view(), name="ai-chat"),
+    path("api/brand-workspace-analysis/", BrandWorkspaceAnalysisAPIView.as_view(), name="brand-workspace-analysis" )
 
 ]

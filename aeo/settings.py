@@ -29,6 +29,10 @@ DEBUG = True
 ALLOWED_HOSTS = ['malangcode.pythonanywhere.com', 'localhost']
 
 
+SERPER_API_KEY = "3fb6fcb2c578777e522295c57fbe55979bb10e9d"
+
+
+
 # Application definition
 
 INSTALLED_APPS = [

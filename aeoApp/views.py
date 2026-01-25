@@ -8,6 +8,7 @@ from .serializers import *
 from rest_framework.views import APIView
 from .models import BrandProfile
 from .serializers import BrandProfileSerializer
+from django.db.models import Sum, F
 
 
 User = get_user_model()
@@ -258,3 +259,115 @@ class SecondaryBrandView(
     # DELETE
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)        
+    
+    
+    
+    
+    
+
+class BrandWorkspaceAnalysisAPIView(APIView):
+    """
+    Returns:
+      - Prompt history with brand mentions
+      - Brand metrics (total mentions, percentage, trend)
+      - Time series data for plotting
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        try:
+            brand_profile = user.brand_profile
+        except BrandProfile.DoesNotExist:
+            return Response({"error": "Brand profile not found"}, status=404)
+
+        # -------------------------------------------------
+        # 1️⃣ Prompt history
+        # -------------------------------------------------
+        prompt_history_qs = PromptHistory.objects.filter(
+            brand_profile=brand_profile
+        ).order_by("-created_at")[:50]  # last 50 prompts
+
+        prompt_history = []
+        for ph in prompt_history_qs:
+            prompt_history.append({
+                "id": ph.id,
+                "prompt": ph.prompt,
+                "date": ph.created_at.strftime("%b %d, %Y"),
+                "timestamp": ph.created_at.strftime("%I:%M %p"),
+                "brandMentioned": ph.user_brand_mentioned or ph.competitor_mentioned,
+                "brands": ph.mentioned_brands,
+            })
+
+        # -------------------------------------------------
+        # 2️⃣ Brand metrics
+        # -------------------------------------------------
+        metrics_qs = BrandMentionMetric.objects.filter(
+            brand_profile=brand_profile
+        ).order_by("-total_mentions")
+
+        total_mentions = metrics_qs.aggregate(total=Sum("total_mentions"))["total"] or 1
+
+        brand_metrics = []
+        for m in metrics_qs:
+            percentage = round((m.total_mentions / total_mentions) * 100)
+            # Calculate trend by comparing with previous day sum (optional: here we can assume 'up', 'down', 'stable')
+            last_day = BrandMentionTimeseries.objects.filter(
+                brand_profile=brand_profile,
+                brand_name=m.brand_name
+            ).order_by("-date").first()
+            prev_day = BrandMentionTimeseries.objects.filter(
+                brand_profile=brand_profile,
+                brand_name=m.brand_name
+            ).order_by("-date")[1:2].first() if BrandMentionTimeseries.objects.filter(
+                brand_profile=brand_profile,
+                brand_name=m.brand_name
+            ).count() > 1 else None
+
+            if last_day and prev_day:
+                if last_day.mentions > prev_day.mentions:
+                    trend = "up"
+                elif last_day.mentions < prev_day.mentions:
+                    trend = "down"
+                else:
+                    trend = "stable"
+            else:
+                trend = "stable"
+
+            brand_metrics.append({
+                "name": m.brand_name,
+                "mentions": m.total_mentions,
+                "percentage": percentage,
+                "trend": trend,
+            })
+
+        # -------------------------------------------------
+        # 3️⃣ Time series
+        # -------------------------------------------------
+        # Collect last 14 days
+        ts_qs = BrandMentionTimeseries.objects.filter(
+            brand_profile=brand_profile
+        ).order_by("date")
+
+        # Prepare data grouped by date
+        time_series_dict = {}
+        for ts in ts_qs:
+            date_str = ts.date.strftime("%b %d")  # e.g., "Jan 12"
+            if date_str not in time_series_dict:
+                time_series_dict[date_str] = {}
+            key = "yourBrand" if ts.brand_name == brand_profile.brand_name else ts.brand_name.replace(" ", "")
+            time_series_dict[date_str][key] = ts.mentions
+
+        # Convert to list
+        time_series_data = []
+        for date, data in time_series_dict.items():
+            entry = {"date": date}
+            entry.update(data)
+            time_series_data.append(entry)
+
+        return Response({
+            "promptHistory": prompt_history,
+            "brandMetrics": brand_metrics,
+            "timeSeriesData": time_series_data,
+        })    
