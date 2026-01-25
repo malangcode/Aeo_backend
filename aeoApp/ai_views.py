@@ -253,7 +253,13 @@ class AEOChatAPIView(APIView):
         headers = {"X-API-KEY": settings.SERPER_API_KEY, "Content-Type": "application/json"}
         payload = {"q": prompt}
         print(settings.SERPER_API_KEY)
-
+        
+        try:
+            r = requests.get("https://google.serper.dev/search")
+            print(r.status_code)
+        except Exception as e:
+            print("Error connecting:", e)
+        
         try:
             serp_response = requests.post(
                 "https://google.serper.dev/search", headers=headers, json=payload, timeout=10
